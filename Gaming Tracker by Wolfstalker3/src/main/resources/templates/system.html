@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::div.content})}">
+<head>
+    <title>System Monitor</title>
+</head>
+<body>
+    <div class="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-desktop me-2"></i>System Monitor</h2>
+            <div class="text-muted">
+                <small><i class="fas fa-sync-alt me-1"></i>Auto-refreshes every 30 seconds</small>
+            </div>
+        </div>
+
+        <!-- System Info -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>System Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Operating System:</strong><br>
+                                <span th:text="${systemInfo.osName ?: 'Unknown'}" class="text-muted">Unknown</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>CPU:</strong><br>
+                                <span th:text="${systemInfo.cpuName ?: 'Unknown'}" class="text-muted">Unknown</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>CPU Cores:</strong><br>
+                                <span th:text="${systemInfo.cpuCores ?: 'Unknown'}" class="text-muted">Unknown</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Total Memory:</strong><br>
+                                <span th:text="${systemInfo.totalMemoryGB ?: 'Unknown'} + ' GB'" class="text-muted">Unknown</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-microchip fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">CPU Usage</h5>
+                        <div class="display-6 text-primary" th:text="${systemMetrics.cpuUsage != null ? systemMetrics.cpuUsage + '%' : 'N/A'}">N/A</div>
+                        <div class="progress mt-3" th:if="${systemMetrics.cpuUsage != null}">
+                            <div class="progress-bar bg-primary" 
+                                 th:style="'width: ' + ${systemMetrics.cpuUsage} + '%'"
+                                 th:classappend="${systemMetrics.cpuUsage > 80 ? 'bg-danger' : (systemMetrics.cpuUsage > 60 ? 'bg-warning' : 'bg-success')}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-memory fa-3x text-info mb-3"></i>
+                        <h5 class="card-title">Memory Usage</h5>
+                        <div class="display-6 text-info" th:text="${systemMetrics.memoryUsage != null ? systemMetrics.memoryUsage + '%' : 'N/A'}">N/A</div>
+                        <div class="progress mt-3" th:if="${systemMetrics.memoryUsage != null}">
+                            <div class="progress-bar bg-info" 
+                                 th:style="'width: ' + ${systemMetrics.memoryUsage} + '%'"
+                                 th:classappend="${systemMetrics.memoryUsage > 85 ? 'bg-danger' : (systemMetrics.memoryUsage > 70 ? 'bg-warning' : 'bg-info')}"></div>
+                        </div>
+                        <small class="text-muted mt-2" th:if="${systemMetrics.availableMemoryGB != null}">
+                            <span th:text="${systemMetrics.availableMemoryGB}">0</span> GB Available
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-thermometer-half fa-3x text-warning mb-3"></i>
+                        <h5 class="card-title">CPU Temperature</h5>
+                        <div class="display-6 text-warning" th:text="${systemMetrics.cpuTemperature != null ? systemMetrics.cpuTemperature + '°C' : 'N/A'}">N/A</div>
+                        <div class="progress mt-3" th:if="${systemMetrics.cpuTemperature != null}">
+                            <div class="progress-bar" 
+                                 th:style="'width: ' + ${systemMetrics.cpuTemperature} + '%'"
+                                 th:classappend="${systemMetrics.cpuTemperature > 80 ? 'bg-danger' : (systemMetrics.cpuTemperature > 65 ? 'bg-warning' : 'bg-success')}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-tachometer-alt fa-3x text-success mb-3"></i>
+                        <h5 class="card-title">System Status</h5>
+                        <div class="display-6">
+                            <span th:if="${systemMetrics.cpuUsage != null and systemMetrics.memoryUsage != null}" 
+                                  th:text="${systemMetrics.cpuUsage < 70 and systemMetrics.memoryUsage < 80 ? 'Good' : (systemMetrics.cpuUsage > 90 or systemMetrics.memoryUsage > 90 ? 'Critical' : 'Warning')}"
+                                  th:classappend="${systemMetrics.cpuUsage < 70 and systemMetrics.memoryUsage < 80 ? 'text-success' : (systemMetrics.cpuUsage > 90 or systemMetrics.memoryUsage > 90 ? 'text-danger' : 'text-warning')}">Good</span>
+                            <span th:unless="${systemMetrics.cpuUsage != null and systemMetrics.memoryUsage != null}" class="text-muted">Unknown</span>
+                        </div>
+                        <small class="text-muted">Overall Performance</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Optimization Recommendations -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="card-title mb-0"><i class="fas fa-lightbulb me-2"></i>Optimization Recommendations</h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${recommendations.empty}" class="text-center text-muted py-4">
+                            <i class="fas fa-check-circle fa-3x mb-3 text-success"></i>
+                            <h5>System Running Optimally!</h5>
+                            <p>No optimization recommendations at this time.</p>
+                        </div>
+                        
+                        <div th:unless="${recommendations.empty}">
+                            <div th:each="entry : ${recommendations}" class="mb-3">
+                                <div class="alert" th:classappend="${entry.key == 'general' ? 'alert-success' : 'alert-warning'}" role="alert">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas" 
+                                           th:classappend="${entry.key == 'cpu' ? 'fa-microchip' : (entry.key == 'memory' ? 'fa-memory' : (entry.key == 'temperature' ? 'fa-thermometer-half' : 'fa-check-circle'))}"
+                                           th:classappend="${entry.key == 'general' ? ' text-success' : ' text-warning'}"
+                                           style="font-size: 1.5rem;"></i>
+                                        <div class="ms-3">
+                                            <strong th:text="${entry.key == 'cpu' ? 'CPU Optimization' : (entry.key == 'memory' ? 'Memory Optimization' : (entry.key == 'temperature' ? 'Temperature Warning' : 'System Status'))}">Recommendation</strong>
+                                            <p class="mb-0" th:text="${entry.value}">Recommendation text</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Gaming Optimization Tips -->
+                        <div class="mt-4">
+                            <h6><i class="fas fa-gamepad me-2"></i>Gaming Optimization Tips</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Close unnecessary background applications</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Keep your system updated</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Monitor temperatures during gaming</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Optimize in-game graphics settings</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Use game mode on Windows</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Ensure adequate cooling</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

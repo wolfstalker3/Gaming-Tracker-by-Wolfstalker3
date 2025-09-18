@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::div.content})}">
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+    <div class="content">
+        <div class="gaming-header">
+            <h1><i class="fas fa-gamepad me-3"></i>Gaming Session Optimizer</h1>
+            <p>Track your gaming performance, optimize your setup, and schedule your sessions</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="metric-card">
+                    <div class="metric-value" th:text="${overallStats.sessionsThisWeek ?: 0}">0</div>
+                    <div class="metric-label">Sessions This Week</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="metric-card">
+                    <div class="metric-value" th:text="${overallStats.playtimeThisWeekHours ?: 0} + 'h'">0h</div>
+                    <div class="metric-label">Playtime This Week</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="metric-card">
+                    <div class="metric-value" th:text="${activeSessions.size()}">0</div>
+                    <div class="metric-label">Active Sessions</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="metric-card">
+                    <div class="metric-value" th:text="${todaySchedules.size()}">0</div>
+                    <div class="metric-label">Today's Schedule</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- System Performance -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0"><i class="fas fa-desktop me-2"></i>System Performance</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="mb-3">
+                                    <div class="h4 text-primary" th:text="${systemMetrics.cpuUsage != null ? systemMetrics.cpuUsage + '%' : 'N/A'}">N/A</div>
+                                    <small class="text-muted">CPU Usage</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="mb-3">
+                                    <div class="h4 text-info" th:text="${systemMetrics.memoryUsage != null ? systemMetrics.memoryUsage + '%' : 'N/A'}">N/A</div>
+                                    <small class="text-muted">Memory Usage</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="mb-3">
+                                    <div class="h4 text-warning" th:text="${systemMetrics.cpuTemperature != null ? systemMetrics.cpuTemperature + '°C' : 'N/A'}">N/A</div>
+                                    <small class="text-muted">CPU Temp</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="/system" class="btn btn-primary btn-sm">
+                                <i class="fas fa-cogs me-1"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Sessions -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0"><i class="fas fa-play-circle me-2"></i>Active Sessions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${activeSessions.empty}" class="text-center text-muted py-4">
+                            <i class="fas fa-pause-circle fa-3x mb-3"></i>
+                            <p>No active gaming sessions</p>
+                            <a href="/sessions" class="btn btn-success">Start New Session</a>
+                        </div>
+                        <div th:if="${!activeSessions.empty}">
+                            <div th:each="session : ${activeSessions}" class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1" th:text="${session.game.name}">Game Name</h6>
+                                        <small class="text-muted">Started: <span th:text="${#temporals.format(session.startTime, 'HH:mm')}">00:00</span></small>
+                                    </div>
+                                    <span class="status-badge status-active">Active</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Today's Schedule -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="card-title mb-0"><i class="fas fa-calendar-day me-2"></i>Today's Schedule</h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${todaySchedules.empty}" class="text-center text-muted py-4">
+                            <i class="fas fa-calendar-plus fa-3x mb-3"></i>
+                            <p>No scheduled sessions today</p>
+                            <a href="/schedule" class="btn btn-warning">Plan Your Day</a>
+                        </div>
+                        <div th:if="${!todaySchedules.empty}">
+                            <div th:each="schedule : ${todaySchedules}" class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1" th:text="${schedule.title}">Schedule Title</h6>
+                                        <small class="text-muted">
+                                            <span th:text="${#temporals.format(schedule.scheduledTime, 'HH:mm')}">00:00</span>
+                                            <span th:if="${schedule.game != null}" th:text="'- ' + ${schedule.game.name}"></span>
+                                        </small>
+                                    </div>
+                                    <span class="status-badge"
+                                          th:classappend="${schedule.completed ? 'status-completed' : (schedule.scheduledTime.isBefore(T(java.time.LocalDateTime).now()) ? 'status-overdue' : 'status-upcoming')}"
+                                          th:text="${schedule.completed ? 'Completed' : (schedule.scheduledTime.isBefore(T(java.time.LocalDateTime).now()) ? 'Overdue' : 'Upcoming')}">Status</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Games -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0"><i class="fas fa-gamepad me-2"></i>Your Games</h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${games.empty}" class="text-center text-muted py-4">
+                            <i class="fas fa-plus-circle fa-3x mb-3"></i>
+                            <p>No games added yet</p>
+                            <a href="/games" class="btn btn-info">Add Games</a>
+                        </div>
+                        <div th:if="${!games.empty}">
+                            <div th:each="game, iterStat : ${games}" th:if="${iterStat.index < 5}" class="mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0" th:text="${game.name}">Game Name</h6>
+                                        <small class="text-muted" th:text="${game.genre}">Genre</small>
+                                    </div>
+                                    <a th:href="@{'/analytics/game/' + ${game.id}}" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-chart-line"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="text-center mt-3" th:if="${games.size() > 5}">
+                                <a href="/games" class="btn btn-info btn-sm">
+                                    View All Games (<span th:text="${games.size()}">0</span>)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3 mb-2">
+                                <a href="/games" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-plus me-2"></i>Add Game
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a href="/sessions" class="btn btn-outline-success w-100">
+                                    <i class="fas fa-play me-2"></i>Start Session
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a href="/schedule" class="btn btn-outline-warning w-100">
+                                    <i class="fas fa-calendar-plus me-2"></i>Schedule Game
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a href="/analytics" class="btn btn-outline-info w-100">
+                                    <i class="fas fa-chart-bar me-2"></i>View Analytics
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
